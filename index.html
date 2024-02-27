@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+	<title>Conquest Map</title>
+	<!-- https://open-innovations.github.io/oi.hexmap.js/ -->
+	<script src='./js/oi.hexmap.js'></script>
+	<style>
+		html,body {
+			background: #113;
+			font-family: Menlo, Consolas, Monaco, "Lucida Console", monospace;
+		}
+		#conquest-hexmap {
+			width: 100%;
+			height: 90vh;
+			margin-top: 5vh;
+		}
+		#conquest-hexmap .hex-cell {
+			stroke: #ddd;
+			stroke-width: 2;
+			transition: all 0.1s ease-in;
+		}
+		/* Make the hexagon larger when hovered */
+		#conquest-hexmap .hex-cell.hover {
+			stroke-width: 4px;
+			filter: drop-shadow( 2px 3px 4px rgba(0, 0, 0, .7));
+			transform: scale(1.75);
+		}
+		/* Set the on and off styles for the text labels */
+		#conquest-hexmap .hex-label tspan.on {
+			display: none;
+		}
+		#conquest-hexmap .hex-label tspan.off {
+			display: block;
+		}
+		#conquest-hexmap .hex-label.hover tspan.on {
+			display: block;
+		}
+		#conquest-hexmap .hex-label.hover tspan.off {
+			display: none;
+		}
+		#conquest-hexmap .hex-label tspan.world-name {
+			font-weight: 700;
+		}
+	</style>
+</head>
+<body>
+	<div id='conquest-hexmap' />
+
+<script>
+const gDocOutput = [
+	{
+		"key": "PuppisSun",
+		"q": 4,
+		"r": 4,
+		"sector": "Puppis",
+		"ordinal": "Sun",
+		"planetType": "Fortress",
+		"boon": "Daniel",
+		"initial": "Red",
+		"r1AttackedBy": "Blue"
+	},
+	{
+		"key": "Puppis01",
+		"q": 3,
+		"r": 5,
+		"sector": "Puppis",
+		"ordinal": 1,
+		"planetType": "Agricultural",
+		"boon": "Headhunters",
+		"initial": "Red",
+		"endR1Owner": "Red"
+	},
+	{
+		"key": "Puppis02",
+		"q": 4,
+		"r": 5,
+		"sector": "Puppis",
+		"ordinal": 2,
+		"planetType": "Daemon",
+		"boon": "Laughter of the Thirsting Gods",
+		"initial": "Blue",
+		"r1AttackedBy": "Red"
+	},
+	{
+		"key": "Puppis03",
+		"q": 3,
+		"r": 4,
+		"sector": "Puppis",
+		"ordinal": 3,
+		"planetType": "Shrine",
+		"boon": "Guiding Light",
+		"initial": "Blue",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "Puppis04",
+		"q": 3,
+		"r": 3,
+		"sector": "Puppis",
+		"ordinal": 4,
+		"planetType": "Fortress",
+		"boon": "Firing Blanks",
+		"initial": "Blue",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "KatiaSun",
+		"q": 12,
+		"r": 4,
+		"sector": "Katia",
+		"ordinal": "Sun",
+		"planetType": "Forge",
+		"boon": "Neurok Hover Sail",
+		"initial": "White",
+		"r1AttackedBy": "Blue"
+	},
+	{
+		"key": "Katia01",
+		"q": 10,
+		"r": 5,
+		"sector": "Katia",
+		"ordinal": 1,
+		"planetType": "Hive",
+		"boon": "Shock and Awe",
+		"initial": "Blue",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "Katia02",
+		"q": 11,
+		"r": 5,
+		"sector": "Katia",
+		"ordinal": 2,
+		"planetType": "Daemon",
+		"boon": "Cowards but Survivors",
+		"initial": "Blue",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "Katia03",
+		"q": 12,
+		"r": 5,
+		"sector": "Katia",
+		"ordinal": 3,
+		"planetType": "Forge",
+		"boon": "Aerial Bombardment",
+		"initial": "White",
+		"r1AttackedBy": "Blue",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "Katia04",
+		"q": 11,
+		"r": 4,
+		"sector": "Katia",
+		"ordinal": 4,
+		"planetType": "Death",
+		"boon": "Even in Death I Serve",
+		"initial": "Blue",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "Katia05",
+		"q": 10,
+		"r": 3,
+		"sector": "Katia",
+		"ordinal": 5,
+		"planetType": "Fortress",
+		"boon": "Daniel",
+		"initial": "Blue",
+		"r1AttackedBy": "White",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "Katia06",
+		"q": 11,
+		"r": 3,
+		"sector": "Katia",
+		"ordinal": 6,
+		"planetType": "Hive",
+		"boon": "Reckless Advance",
+		"initial": "White",
+		"r1AttackedBy": "Blue"
+	},
+	{
+		"key": "Katia07",
+		"q": 12,
+		"r": 3,
+		"sector": "Katia",
+		"ordinal": 7,
+		"planetType": "Hive",
+		"boon": "Glory Boyz",
+		"initial": "White",
+		"endR1Owner": "White"
+	},
+	{
+		"key": "Katia08",
+		"q": 11,
+		"r": 2,
+		"sector": "Katia",
+		"ordinal": 8,
+		"planetType": "Shrine",
+		"boon": "Divine Intervention",
+		"initial": "Blue",
+		"endR1Owner": "Blue"
+	},
+	{
+		"key": "LeilosSun",
+		"q": 7,
+		"r": 9,
+		"sector": "Leilos",
+		"ordinal": "Sun",
+		"planetType": "Death",
+		"boon": "Even in Death I Serve",
+		"initial": "Green",
+		"endR1Owner": "Green"
+	},
+	{
+		"key": "Leilos01",
+		"q": 6,
+		"r": 11,
+		"sector": "Leilos",
+		"ordinal": 1,
+		"planetType": "Agricultural",
+		"boon": "Can We Keep Him?",
+		"initial": "Green",
+		"r1AttackedBy": "Red"
+	},
+	{
+		"key": "Leilos02",
+		"q": 7,
+		"r": 11,
+		"sector": "Leilos",
+		"ordinal": 2,
+		"planetType": "Shrine",
+		"boon": "Old Bale Eye",
+		"initial": "Green",
+		"r1AttackedBy": "Red"
+	},
+	{
+		"key": "Leilos03",
+		"q": 7,
+		"r": 10,
+		"sector": "Leilos",
+		"ordinal": 3,
+		"planetType": "Hive",
+		"boon": "Shock and Awe",
+		"initial": "Green",
+		"r1AttackedBy": "White"
+	},
+	{
+		"key": "Leilos04",
+		"q": 8,
+		"r": 10,
+		"sector": "Leilos",
+		"ordinal": 4,
+		"planetType": "Administratum",
+		"boon": "Advance to the Rear",
+		"initial": "Green",
+		"r1AttackedBy": "Red"
+	},
+	{
+		"key": "Leilos05",
+		"q": 6,
+		"r": 9,
+		"sector": "Leilos",
+		"ordinal": 5,
+		"planetType": "Hive",
+		"boon": "Glory Boyz",
+		"initial": "Green",
+		"endR1Owner": "Green"
+	},
+	{
+		"key": "Leilos06",
+		"q": 8,
+		"r": 9,
+		"sector": "Leilos",
+		"ordinal": 6,
+		"planetType": "Administratum",
+		"boon": "Book Smart",
+		"initial": "Orange",
+		"r1AttackedBy": "Green"
+	},
+	{
+		"key": "Leilos07",
+		"q": 6,
+		"r": 8,
+		"sector": "Leilos",
+		"ordinal": 7,
+		"planetType": "Daemon",
+		"boon": "Warp Rifts",
+		"initial": "Green",
+		"endR1Owner": "Green"
+	},
+	{
+		"key": "Leilos08",
+		"q": 7,
+		"r": 8,
+		"sector": "Leilos",
+		"ordinal": 8,
+		"planetType": "Hive",
+		"boon": "Reckless Advance",
+		"initial": "Orange",
+		"r1AttackedBy": "Green"
+	},
+	{
+		"key": "Leilos09",
+		"q": 8,
+		"r": 8,
+		"sector": "Leilos",
+		"ordinal": 9,
+		"planetType": "Daemon",
+		"boon": "Cowards but Survivors",
+		"initial": "Green",
+		"endR1Owner": "Green"
+	},
+	{
+		"key": "Leilos10",
+		"q": 7,
+		"r": 7,
+		"sector": "Leilos",
+		"ordinal": 10,
+		"planetType": "Forge",
+		"boon": "Rigged to Blow",
+		"initial": "Orange",
+		"r1AttackedBy": "Green"
+	},
+	{
+		"key": "PerseusSun",
+		"q": 15,
+		"r": 10,
+		"sector": "Perseus",
+		"ordinal": "Sun",
+		"planetType": "Daemon",
+		"boon": "Warp Rifts",
+		"initial": "Orange",
+		"endR1Owner": "Orange"
+	},
+	{
+		"key": "Perseus01",
+		"q": 14,
+		"r": 11,
+		"sector": "Perseus",
+		"ordinal": 1,
+		"planetType": "Forge",
+		"boon": "Rigged to Blow",
+		"initial": "Blue",
+		"r1AttackedBy": "Orange"
+	},
+	{
+		"key": "Perseus02",
+		"q": 15,
+		"r": 11,
+		"sector": "Perseus",
+		"ordinal": 2,
+		"planetType": "Administratum",
+		"boon": "Advance to the Rear",
+		"initial": "Orange",
+		"endR1Owner": "Orange"
+	},
+	{
+		"key": "Perseus03",
+		"q": 14,
+		"r": 10,
+		"sector": "Perseus",
+		"ordinal": 3,
+		"planetType": "Hive",
+		"boon": "Trench Fighters",
+		"initial": "Blue",
+		"r1AttackedBy": "Orange"
+	},
+	{
+		"key": "Perseus04",
+		"q": 16,
+		"r": 10,
+		"sector": "Perseus",
+		"ordinal": 4,
+		"planetType": "Agricultural",
+		"boon": "Headhunters",
+		"initial": "Orange",
+		"endR1Owner": "Orange"
+	},
+	{
+		"key": "Perseus05",
+		"q": 17,
+		"r": 10,
+		"sector": "Perseus",
+		"ordinal": 5,
+		"planetType": "Fortress",
+		"boon": "Firing Blanks",
+		"initial": "Orange",
+		"endR1Owner": "Orange"
+	},
+	{
+		"key": "Perseus06",
+		"q": 14,
+		"r": 9,
+		"sector": "Perseus",
+		"ordinal": 6,
+		"planetType": "Daemon",
+		"boon": "Laughter of the Thirsting Gods",
+		"initial": "Red",
+		"r1AttackedBy": "Orange"
+	},
+	{
+		"key": "Perseus07",
+		"q": 15,
+		"r": 9,
+		"sector": "Perseus",
+		"ordinal": 7,
+		"planetType": "Forge",
+		"boon": "Neurok Hover Sail",
+		"initial": "Red",
+		"endR1Owner": "Red"
+	},
+	{
+		"key": "Perseus08",
+		"q": 14,
+		"r": 8,
+		"sector": "Perseus",
+		"ordinal": 8,
+		"planetType": "Administratum",
+		"boon": "Operation Triple Dragon",
+		"initial": "Orange",
+		"endR1Owner": "Orange"
+	},
+	{
+		"key": "Perseus09",
+		"q": 15,
+		"r": 8,
+		"sector": "Perseus",
+		"ordinal": 9,
+		"planetType": "Hive",
+		"boon": "Hasty Machine Rites//Rapid Regeneration",
+		"initial": "White",
+		"r1AttackedBy": "Orange"
+	},
+	{
+		"key": "Perseus10",
+		"q": 16,
+		"r": 8,
+		"sector": "Perseus",
+		"ordinal": 10,
+		"planetType": "Shrine",
+		"boon": "Divine Intervention",
+		"initial": "White",
+		"endR1Owner": "White"
+	},
+	{
+		"key": "BrisconSun",
+		"q": 11,
+		"r": 14,
+		"sector": "Briscon",
+		"ordinal": "Sun",
+		"planetType": "Death",
+		"boon": "Unbreakable Resolve",
+		"initial": "Red",
+		"r1AttackedBy": "Green"
+	},
+	{
+		"key": "Briscon01",
+		"q": 11,
+		"r": 16,
+		"sector": "Briscon",
+		"ordinal": 1,
+		"planetType": "Hive",
+		"boon": "Trench Fighters",
+		"initial": "Red",
+		"endR1Owner": "Red"
+	},
+	{
+		"key": "Briscon02",
+		"q": 12,
+		"r": 16,
+		"sector": "Briscon",
+		"ordinal": 2,
+		"planetType": "Death",
+		"boon": "Pay for Every Step",
+		"initial": "Green",
+		"endR1Owner": "Green"
+	},
+	{
+		"key": "Briscon03",
+		"q": 10,
+		"r": 15,
+		"sector": "Briscon",
+		"ordinal": 3,
+		"planetType": "Hive",
+		"boon": "Cool Heads",
+		"initial": "Red",
+		"endR1Owner": "Red"
+	},
+	{
+		"key": "Briscon04",
+		"q": 11,
+		"r": 15,
+		"sector": "Briscon",
+		"ordinal": 4,
+		"planetType": "Forge",
+		"boon": "Aerial Bombardment",
+		"initial": "Red",
+		"r1AttackedBy": "White"
+	},
+	{
+		"key": "Briscon05",
+		"q": 10,
+		"r": 14,
+		"sector": "Briscon",
+		"ordinal": 5,
+		"planetType": "Administratum",
+		"boon": "Operation Triple Dragon",
+		"initial": "Red",
+		"endR1Owner": "Red"
+	},
+	{
+		"key": "Briscon06",
+		"q": 12,
+		"r": 14,
+		"sector": "Briscon",
+		"ordinal": 6,
+		"planetType": "Administratum",
+		"boon": "Book Smart",
+		"initial": "Red",
+		"endR1Owner": "Red"
+	},
+	{
+		"key": "Briscon07",
+		"q": 10,
+		"r": 13,
+		"sector": "Briscon",
+		"ordinal": 7,
+		"planetType": "Hive",
+		"boon": "Hasty Machine Rites//Rapid Regeneration",
+		"initial": "Orange",
+		"endR1Owner": "Orange"
+	},
+	{
+		"key": "Briscon08",
+		"q": 11,
+		"r": 13,
+		"sector": "Briscon",
+		"ordinal": 8,
+		"planetType": "Shrine",
+		"boon": "Guiding Light",
+		"initial": "Green",
+		"endR1Owner": "Green"
+	},
+	{
+		"key": "QuintorSun",
+		"q": 19,
+		"r": 14,
+		"sector": "Quintor",
+		"ordinal": "Sun",
+		"planetType": "Death",
+		"boon": "Unbreakable Resolve",
+		"initial": "White",
+		"endR1Owner": "White"
+	},
+	{
+		"key": "Quintor01",
+		"q": 18,
+		"r": 15,
+		"sector": "Quintor",
+		"ordinal": 1,
+		"planetType": "Agricultural",
+		"boon": "Can We Keep Him?",
+		"initial": "White",
+		"endR1Owner": "White"
+	},
+	{
+		"key": "Quintor02",
+		"q": 18,
+		"r": 14,
+		"sector": "Quintor",
+		"ordinal": 2,
+		"planetType": "Death",
+		"boon": "Pay for Every Step",
+		"initial": "White",
+		"endR1Owner": "White"
+	},
+	{
+		"key": "Quintor03",
+		"q": 20,
+		"r": 14,
+		"sector": "Quintor",
+		"ordinal": 3,
+		"planetType": "Hive",
+		"boon": "Cool Heads",
+		"initial": "Orange",
+		"r1AttackedBy": "White"
+	},
+	{
+		"key": "Quintor04",
+		"q": 18,
+		"r": 13,
+		"sector": "Quintor",
+		"ordinal": 4,
+		"planetType": "Shrine",
+		"boon": "Old Bale Eye",
+		"initial": "White",
+		"endR1Owner": "White"
+	}
+];
+
+// Re-index gDoc output by the 'key' property.
+const MagnusExpanse = gDocOutput.reduce( (obj, item) => {
+	return {
+		...obj,
+		[ item.key ]: { ...item, 'colour': item.initial }
+	};
+}, {} );
+
+// Render the hexmap.
+const hex = new OI.hexmap(
+	document.getElementById('conquest-hexmap'),
+	{
+		'grid': {
+			'show': true,
+		},
+		'padding': 2,
+		'label': {
+			'show': true,
+			'clip': true,
+			'format': function( txt, attr ) {
+				if ( ! attr.hex.ordinal ) {
+					return '';
+				}
+	
+				return '<tspan class="off" style="background:' + attr.hex.initial + ';">' +
+						attr.hex.ordinal +
+					'</tspan>' +
+					'<tspan class="on world-name" y="' + ( attr.y + ( -0.5 * attr['font-size'] ) ) +'" x="' + attr.x + '">' +
+						attr.hex.sector + '-' + attr.hex.ordinal + 
+					'</tspan>' +
+					'<tspan class="on world-type" y="' + ( attr.y + ( 0.5 * attr['font-size'] ) ) +'" x="' + attr.x + '">' +
+						attr.hex.planetType
+					'</tspan>';
+			}
+		},
+		// Full grid is 20 high by 23 wide.
+		'hexjson':{
+			'layout':'odd-r',
+			'hexes': MagnusExpanse
+		}
+	}
+);
+</script>
+</body>
+</html>
